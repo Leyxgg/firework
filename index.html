@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial‑scale=1.0">
+    <title>我的烟花网站</title>
+    <style>
+        * {margin:0; padding:0;}
+        body {background:#000; overflow:hidden;}
+        canvas {display:block;}
+    </style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<script>
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d");
+let w = canvas.width = window.innerWidth;
+let h = canvas.height = window.innerHeight;
+
+window.onresize = ()=>{
+    w = canvas.width = innerWidth;
+    h = canvas.height = innerHeight;
+}
+
+// 粒子对象
+class Particle {
+  constructor(x,y,color){
+    this.x = x;
+    this.y = y;
+    this.vx = (Math.random()-0.5)*6;
+    this.vy = (Math.random()-0.5)*6;
+    this.color = color;
+    this.life = 100;
+  }
+  update(){
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += 0.08;
+    this.life -=1;
+  }
+  draw(){
+    ctx.globalAlpha = this.life /100;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,2,0,Math.PI*2);
+    ctx.fill();
+  }
+}
+
+let list = [];
+
+// 爆炸函数
+function boom(x,y){
+    const colors = ["#ff4444","#ffdd22","#44eeff","#44ff66","#ff66dd"];
+    const c = colors[Math.floor(Math.random()*colors.length)];
+    for(let i=0; i<60; i++){
+        list.push(new Particle(x,y,c));
+    }
+}
+
+// 发射一枚烟花火箭
+function fire(){
+    let x = Math.random() * w;
+    let y = h;
+    const targetY = h * (0.2 + Math.random()*0.35);
+
+    function rocket(){
+        y -= 7;
+        if(y < targetY){
+            boom(x,y);
+            return;
+        }
+        ctx.fillStyle="#fff";
+        ctx.beginPath();
+        ctx.arc(x,y,2,0,Math.PI*2);
+        ctx.fill();
+        requestAnimationFrame(rocket);
+    }
+    rocket();
+}
+
+// 点击屏幕爆炸
+canvas.onclick = e=>{
+    boom(e.clientX, e.clientY);
+}
+
+// 自动烟花
+setInterval(fire,1200);
+
+// 主动画循环
+function loop(){
+    // 拖尾
+    ctx.fillStyle="rgba(0,0,0,0.1)";
+    ctx.fillRect(0,0,w,h);
+
+    for(let i=list.length-1; i>=0; i--){
+        const p = list[i];
+        p.update();
+        p.draw();
+        if(p.life <=0){
+            list.splice(i,1);
+        }
+    }
+    requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
